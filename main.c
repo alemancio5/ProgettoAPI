@@ -494,10 +494,75 @@ void stationtree_free(station* root) {
 }
 
 int main() {
-    station* stationtree = NULL;
+    station* stationtree = NULL; // The stationtree
+
+    char input[50]; // Input buffer
+    station* s = NULL; // Station pointer
+    car* c = NULL; // Car pointer
+    int s_km = 0; // Station km
+    int c_km = 0; // Car km
 
 
+    while (scanf("%s", input) != EOF) {
+        if (input[0] == 'a') { // "aggiungi-"
+            if (input[9] == 's') { // "stazione"
+                scanf("%s", input);
+                s_km = atoi(input);
+                s = stationtree_search(stationtree, s_km);
+                if (s == NULL) {
+                    stationtree_insert(&stationtree, s_km);
+                    s = stationtree_search(stationtree, s_km);
+                    while (scanf("%s", input) != '\n') {
+                        c_km = atoi(input);
+                        cartree_insert(&(s->cartree), c_km);
+                    }
+                    printf("aggiunta\n");
+                } else {
+                    printf("non aggiunta\n");
+                }
+            } else if (input[9] == 'a') { // "auto"
+                scanf("%s", input);
+                s_km = atoi(input);
+                scanf("%s", input);
+                c_km = atoi(input);
+                s = stationtree_search(stationtree, s_km);
+                if (s != NULL) {
+                    cartree_insert(&(s->cartree), c_km);
+                    printf("aggiunta\n");
+                } else {
+                    printf("non aggiunta\n");
+                }
+            }
+        } else if (input[0] == 'd') { // "demolisci-stazione"
+            scanf("%s", input);
+            s_km = atoi(input);
+            s = stationtree_search(stationtree, s_km);
+            if (s != NULL) {
+                stationtree_delete(&stationtree, s);
+                printf("demolita\n");
+            } else {
+                printf("non demolita\n");
+            }
+        } else if (input[0] == 'r') { // "rottama-auto"
+            scanf("%s", input);
+            s_km = atoi(input);
+            s = stationtree_search(stationtree, s_km);
+            if (s != NULL) {
+                scanf("%s", input);
+                c_km = atoi(input);
+                c = cartree_search(s->cartree, c_km);
+                if (c != NULL) {
+                    cartree_delete(&(s->cartree), c);
+                    printf("rottamata\n");
+                } else {
+                    printf("non rottamata\n");
+                }
+            } else {
+                printf("non rottamata\n");
+            }
+        } else if (input[0] == 'p') { // "pianifica-percorso"
 
-
+        }
+    }
     return 0;
 }
