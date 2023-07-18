@@ -178,6 +178,13 @@ car* cartree_search(car* root, int km) {
     return NULL;
 }
 
+// Function to find the station with the maximum km in the cartree
+car* cartree_max(car* node) {
+    while (node->right != NULL)
+        node = node->right;
+    return node;
+}
+
 // Function to find the station with the minimum km in the cartree
 car* cartree_min(car* node) {
     while (node->left != NULL)
@@ -254,6 +261,7 @@ struct stationnode {
     struct stationnode* right;
     struct stationnode* parent;
     car* cartree;
+    int carmax;
 };
 typedef struct stationnode station;
 
@@ -266,6 +274,7 @@ station* stationtree_create(int km) {
     t->right = NULL;
     t->parent = NULL;
     t->cartree = NULL;
+    t->carmax = 0;
     return t;
 }
 
@@ -476,6 +485,7 @@ void stationtree_delete(station ** root, station* z) {
         y->color = z->color;
     }
 
+    cartree_free(z->cartree);
     free(z);
 
     // If we removed a black node, we have to fix the stationtree
@@ -490,7 +500,23 @@ void stationtree_free(station* root) {
 
     stationtree_free(root->left);
     stationtree_free(root->right);
+    cartree_free(root->cartree);
     free(root);
+}
+
+// Function for front paths
+void path_front (station* root, int begin, int end) {
+    if (begin == end) { // If there is no movement
+        printf("%d\n", begin);
+        return;
+    }
+
+    station* b = stationtree_search(root, begin); // Begin node
+}
+
+// Function for back paths
+void path_back (station* root, int start, int end) {
+
 }
 
 int main() {
@@ -502,6 +528,8 @@ int main() {
     int s_km = 0; // Station km
     int c_km = 0; // Car km
 
+    int begin = 0; // Start of the path
+    int end = 0; // End of the path
 
     while (scanf("%s", input) != EOF) {
         if (input[0] == 'a') { // "aggiungi-"
@@ -515,6 +543,9 @@ int main() {
                     while (scanf("%s", input) != '\n') {
                         c_km = atoi(input);
                         cartree_insert(&(s->cartree), c_km);
+                        if (c_km > s->carmax) {
+                            s->carmax = c_km;
+                        }
                     }
                     printf("aggiunta\n");
                 } else {
@@ -528,6 +559,9 @@ int main() {
                 s = stationtree_search(stationtree, s_km);
                 if (s != NULL) {
                     cartree_insert(&(s->cartree), c_km);
+                    if (c_km > s->carmax) {
+                        s->carmax = c_km;
+                    }
                     printf("aggiunta\n");
                 } else {
                     printf("non aggiunta\n");
@@ -553,6 +587,9 @@ int main() {
                 c = cartree_search(s->cartree, c_km);
                 if (c != NULL) {
                     cartree_delete(&(s->cartree), c);
+                    if (c_km == s->carmax) {
+                        s->carmax = cartree_max(s->cartree)->km;
+                    }
                     printf("rottamata\n");
                 } else {
                     printf("non rottamata\n");
@@ -561,7 +598,15 @@ int main() {
                 printf("non rottamata\n");
             }
         } else if (input[0] == 'p') { // "pianifica-percorso"
-
+            scanf("%s", input);
+            begin = atoi(input);
+            scanf("%s", input);
+            end = atoi(input);
+            if (begin <= end) {
+                path_front(stationtree, begin, end);
+            } else {
+                path_back(stationtree, begin, end);
+            }
         }
     }
     return 0;
