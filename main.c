@@ -165,11 +165,86 @@ void cartree_free(car* root) {
     free(root);
 }
 
+// Function to find a car in the cartree
+car* cartree_search(car* root, int km) {
+    while (root != NULL) {
+        if (km == root->km)
+            return root;
+        else if (km < root->km)
+            root = root->left;
+        else
+            root = root->right;
+    }
+    return NULL;
+}
 
+// Function to find the station with the minimum km in the cartree
+car* cartree_min(car* node) {
+    while (node->left != NULL)
+        node = node->left;
+    return node;
+}
 
+// Function to transplant a tree in the cartree
+void cartree_transplant(car** root, car* u, car* v) {
+    if (u->parent == NULL) {
+        // u is the root node
+        *root = v;
+    } else if (u == u->parent->left) {
+        // u is a left child
+        u->parent->left = v;
+    } else {
+        // u is a right child
+        u->parent->right = v;
+    }
 
+    if (v != NULL) {
+        v->parent = u->parent;
+    }
+}
 
+// Function to delete a node from the cartree
+void cartree_delete(car ** root, car* z) {
+    car* y = z;
+    car* x = NULL;
+    char original_color = y->color;
 
+    // If the node has at most one child, splice it out directly
+    if (z->left == NULL) {
+        x = z->right;
+        cartree_fix(root, z->right);
+        cartree_transplant(root, z, z->right);
+    } else if (z->right == NULL) {
+        x = z->left;
+        cartree_fix(root, z->left);
+        cartree_transplant(root, z, z->left);
+    } else {
+        // If the node has two children, find the successor and splice it out
+        y = cartree_min(z->right);
+        original_color = y->color;
+        x = y->right;
+
+        if (y->parent == z) {
+            if (x != NULL)
+                x->parent = y;
+        } else {
+            cartree_transplant(root, y, y->right);
+            y->right = z->right;
+            y->right->parent = y;
+        }
+
+        cartree_transplant(root, z, y);
+        y->left = z->left;
+        y->left->parent = y;
+        y->color = z->color;
+    }
+
+    free(z);
+
+    // If we removed a black node, we have to fix the stationtree
+    if (original_color == 'B')
+        cartree_fix(root, x);
+}
 
 // Structure to represent a station in the stationtree
 struct stationnode {
@@ -178,6 +253,7 @@ struct stationnode {
     struct stationnode* left;
     struct stationnode* right;
     struct stationnode* parent;
+    car* cartree;
 };
 typedef struct stationnode station;
 
@@ -189,6 +265,7 @@ station* stationtree_create(int km) {
     t->left = NULL;
     t->right = NULL;
     t->parent = NULL;
+    t->cartree = NULL;
     return t;
 }
 
@@ -325,6 +402,87 @@ void stationtree_print(station* root) {
     stationtree_print(root->right);
 }
 
+// Function to find a station in the stationtree
+station* stationtree_search(station* root, int km) {
+    while (root != NULL) {
+        if (km == root->km)
+            return root;
+        else if (km < root->km)
+            root = root->left;
+        else
+            root = root->right;
+    }
+    return NULL;
+}
+
+// Function to find the station with the minimum km in the stationtree
+station* stationtree_min(station* node) {
+    while (node->left != NULL)
+        node = node->left;
+    return node;
+}
+
+// Function to transplant a tree in the stationtree
+void stationtree_transplant(station** root, station* u, station* v) {
+    if (u->parent == NULL) {
+        // u is the root node
+        *root = v;
+    } else if (u == u->parent->left) {
+        // u is a left child
+        u->parent->left = v;
+    } else {
+        // u is a right child
+        u->parent->right = v;
+    }
+
+    if (v != NULL) {
+        v->parent = u->parent;
+    }
+}
+
+// Function to delete a node from the stationtree
+void stationtree_delete(station ** root, station* z) {
+    station* y = z;
+    station* x = NULL;
+    char original_color = y->color;
+
+    // If the node has at most one child, splice it out directly
+    if (z->left == NULL) {
+        x = z->right;
+        stationtree_fix(root, z->right);
+        stationtree_transplant(root, z, z->right);
+    } else if (z->right == NULL) {
+        x = z->left;
+        stationtree_fix(root, z->left);
+        stationtree_transplant(root, z, z->left);
+    } else {
+        // If the node has two children, find the successor and splice it out
+        y = stationtree_min(z->right);
+        original_color = y->color;
+        x = y->right;
+
+        if (y->parent == z) {
+            if (x != NULL)
+                x->parent = y;
+        } else {
+            stationtree_transplant(root, y, y->right);
+            y->right = z->right;
+            y->right->parent = y;
+        }
+
+        stationtree_transplant(root, z, y);
+        y->left = z->left;
+        y->left->parent = y;
+        y->color = z->color;
+    }
+
+    free(z);
+
+    // If we removed a black node, we have to fix the stationtree
+    if (original_color == 'B')
+        stationtree_fix(root, x);
+}
+
 // Function to free the memory used by stationtree
 void stationtree_free(station* root) {
     if (root == NULL)
@@ -336,20 +494,10 @@ void stationtree_free(station* root) {
 }
 
 int main() {
-    station* root = NULL;
-
-    stationtree_insert(&root, 10);
-    stationtree_insert(&root, 20);
-    stationtree_insert(&root, 30);
-    stationtree_insert(&root, 15);
-    stationtree_insert(&root, 25);
+    station* stationtree = NULL;
 
 
-    printf("Print: ");
-    stationtree_print(root);
-    printf("\n");
 
-    stationtree_free(root);
 
     return 0;
 }
