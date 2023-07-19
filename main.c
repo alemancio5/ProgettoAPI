@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <math.h>
 
 #define MAX_INPUT 50
+#define MAX_STEPS 50
 
 // Structure to represent a station in the cartree
 struct carnode {
@@ -479,17 +479,84 @@ void stationtree_free(station* root) {
     free(root);
 }
 
+station* next_forward(station* root) {
+    if (root->right == NULL)
+        return root->parent;
+    else
+        return root->right;
+}
+
+int view_forward(station* root, int end) {
+    int result = 0;
+    station* i = root;
+    while (next_forward(i)->km < end) {
+        if (next_forward(i)->km < end && next_forward(i)->km - root->km <= root->carmax) {
+            i = next_forward(i);
+            result++;
+        } else {
+            break;
+        }
+    }
+    return result;
+}
+
 // Function for front paths
-void path_front (station* root, int begin, int end) {
+void path_forward(station* root, int begin, int end) {
     if (begin == end) { // If there is no movement
         printf("%d\n", begin);
         return;
     }
 
+    station* start = stationtree_search(root, begin); // Find the starting station
+    if (end - begin <= start->carmax) { // If the trip can be direct
+        printf("%d %d\n", begin, end);
+        return;
+    }
+
+    // If are needed intermediate stations
+    station* step = next_forward(start); // Set the first step station
+    station* base = start; // Set the base station
+
+    int view; // Variable for the view that a step has
+    int max_view; // Variable for the maximum view that the steps can have
+    station* best_view = NULL; // Variable for the best step from the current base
+
+    int steps[MAX_STEPS]; // Array for the steps
+    int num_steps = 0; // Variable for the number of steps
+
+    while (step->km < end) { // Algorithm to catch intermediate stations
+        max_view = 0;
+        best_view = NULL;
+        while (step->km < end && (step->km - base->km) <= base->carmax) {
+            view = view_forward(step, end);
+            if (max_view < view) {
+                max_view = view;
+                best_view = step;
+            }
+            step = next_forward(step);
+        }
+        if (best_view != NULL) { // If the best step is found
+            base = best_view;
+            steps[num_steps] = best_view->km;
+            num_steps++;
+        } else { // If there are no steps to reach the end
+            printf("nessun percorso\n");
+            return;
+        }
+        if (end - base->km <= base->carmax) { // If the trip can be direct now
+            break;
+        }
+    }
+
+    printf("%d ", begin); // Print the starting station
+    for (int i = 0; i < num_steps; i++) { // Print the intermediate stations
+        printf("%d ", steps[i]);
+    }
+    printf("%d\n", end); // Print the ending station
 }
 
 // Function for back paths
-void path_back (station* root, int start, int end) {
+void path_back(station* root, int start, int end) {
 
 }
 
@@ -583,12 +650,13 @@ int main() {
             scanf("%s", input);
             end = atoi(input);
             if (begin <= end) {
-                path_front(stationtree, begin, end);
+                path_forward(stationtree, begin, end);
             } else {
                 path_back(stationtree, begin, end);
             }
         }
     }
-
+    printf("\n\n");
+    stationtree_print(stationtree);
     return 0;
 }
