@@ -639,7 +639,7 @@ void stationtree_free(station* root) {
 }
 
 // Function to calculate the number of stations seen from a step
-int view_forward(station* root, int end) {
+int forward_view(station* root, int end) {
     int result = 0;
     station* i = root;
     while (i->km < end) {
@@ -654,7 +654,7 @@ int view_forward(station* root, int end) {
 }
 
 // Function for forward paths
-void path_forward(station* root, int begin, int end) {
+void forward_path(station* root, int begin, int end) {
     if (begin == end) { // If there is no movement
         printf("%d\n", begin);
         return;
@@ -681,7 +681,7 @@ void path_forward(station* root, int begin, int end) {
         max_view = 0;
         best_view = NULL;
         while (step->km < end && (step->km - base->km) <= base->carmax) {
-            view = view_forward(step, end) + count_step;
+            view = forward_view(step, end) + count_step;
             if (max_view < view) {
                 max_view = view;
                 best_view = step;
@@ -715,7 +715,7 @@ void path_forward(station* root, int begin, int end) {
 }
 
 // Function to calculate the number of stations seen from a step
-int view_back(station* root, int end) {
+int back_view(station* root, int end) {
     int result = 0;
     station* i = root;
     while (i->km > end) {
@@ -730,7 +730,7 @@ int view_back(station* root, int end) {
 }
 
 // Function for back paths
-void path_back(station* root, int begin, int end) {
+void back_path(station* root, int begin, int end) {
     station* start = stationtree_search(root, begin); // Find the starting station
     if (begin - end <= start->carmax) { // If the trip can be direct
         printf("%d %d\n", begin, end);
@@ -752,7 +752,7 @@ void path_back(station* root, int begin, int end) {
         max_view = 0;
         best_view = NULL;
         while (step->km > end && (base->km - step->km) <= base->carmax) {
-            view = view_back(step, end) + count_step;
+            view = back_view(step, end) + count_step;
             if (max_view <= view) {
                 max_view = view;
                 best_view = step;
@@ -895,9 +895,9 @@ int main() {
             }
             end = atoi(input);
             if (begin <= end) {
-                path_forward(stationtree, begin, end);
+                forward_path(stationtree, begin, end);
             } else {
-                path_back(stationtree, begin, end);
+                back_path(stationtree, begin, end);
             }
         }
     }
