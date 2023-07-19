@@ -426,6 +426,17 @@ station* stationtree_min(station* node) {
     return node;
 }
 
+// Function to find the maximum node in the stationtree
+station* stationtree_max(station* node) {
+    if (node == NULL)
+        return NULL;
+
+    while (node->right != NULL)
+        node = node->right;
+
+    return node;
+}
+
 // Function to delete a node from the stationtree
 void stationtree_delete(station ** root, station* z) {
     station* y = z;
@@ -496,6 +507,23 @@ station* stationtree_suc(station* node) {
     }
 }
 
+// Function to find the predecessor of a node in the stationtree
+station* stationtree_pre(station* node) {
+    if (node->left != NULL) {
+        // If the node has a left child, the predecessor is the rightmost node in the left subtree
+        return stationtree_max(node->left);
+    } else {
+        // If the node does not have a left child, find the ancestor that is a right child of its parent
+        // The parent of this ancestor will be the predecessor
+        station* parent = node->parent;
+        while (parent != NULL && node == parent->left) {
+            node = parent;
+            parent = node->parent;
+        }
+        return parent;
+    }
+}
+
 // Function to free the memory used by stationtree
 void stationtree_free(station* root) {
     if (root == NULL)
@@ -512,7 +540,7 @@ int view_forward(station* root, int end) {
     int result = 0;
     station* i = root;
     while (i->km < end) {
-        if (i->km < end && stationtree_suc(i)->km - root->km <= root->carmax) {
+        if (i->km < end && (stationtree_suc(i)->km - root->km) <= root->carmax) {
             result++;
             i = stationtree_suc(i);
         } else {
@@ -579,9 +607,71 @@ void path_forward(station* root, int begin, int end) {
     printf("%d\n", end); // Print the ending station
 }
 
-// Function for back paths
-void path_back(station* root, int start, int end) {
+// Function to calculate the number of stations seen from a step
+int view_back(station* root, int end) {
+    int result = 0;
+    station* i = root;
+    while (i->km > end) {
+        if (i->km > end && (root->km - stationtree_pre(i)->km) <= root->carmax) {
+            result++;
+            i = stationtree_pre(i);
+        } else {
+            break;
+        }
+    }
+    return result;
+}
 
+// Function for back paths
+void path_back(station* root, int begin, int end) {
+    station* start = stationtree_search(root, begin); // Find the starting station
+    if (begin - end <= start->carmax) { // If the trip can be direct
+        printf("%d %d\n", begin, end);
+        return;
+    }
+
+    // If are needed intermediate stations
+    station* step = stationtree_pre(start); // Set the first step station
+    int count_step; // Variable for the number of steps
+    station* base = start; // Set the base station
+    int view; // Variable for the view that a step has
+    int max_view; // Variable for the maximum view that the steps can have
+    station* best_view = NULL; // Variable for the best step from the current base
+    int inter[MAX_INTER]; // Array for the steps
+    int num_inter = 0; // Variable for the number of steps
+
+    while (step->km > end) { // Algorithm to catch intermediate stations
+        count_step = 0;
+        max_view = 0;
+        best_view = NULL;
+        while (step->km > end && (base->km - step->km) <= base->carmax) {
+            view = view_back(step, end) + count_step;
+            if (max_view <= view) {
+                max_view = view;
+                best_view = step;
+            }
+            step = stationtree_pre(step);
+            count_step++;
+        }
+        if (best_view != NULL) { // If the best step is found
+            base = best_view;
+            step = stationtree_pre(best_view);
+            inter[num_inter] = best_view->km;
+            num_inter++;
+        } else { // If there are no steps to reach the end
+            printf("nessun percorso\n");
+            return;
+        }
+        if (base->km - end <= base->carmax) { // If the trip can be direct now
+            break;
+        }
+    }
+
+    printf("%d ", begin); // Print the starting station
+    for (int i = 0; i < num_inter; i++) { // Print the intermediate stations
+        printf("%d ", inter[i]);
+    }
+    printf("%d\n", end); // Print the ending station
 }
 
 int main() {
