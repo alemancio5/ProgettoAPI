@@ -166,7 +166,6 @@ void cartree_insert(car** root, int km) {
     car* y = NULL;
     car* x = *root;
 
-    // Find the position to insert the new station
     while (x != NULL) {
         y = x;
         if (km < x->km)
@@ -475,7 +474,6 @@ void stationtree_insert(station** root, int km) {
     station* y = NULL;
     station* x = *root;
 
-    // Find the position to insert the new station
     while (x != NULL) {
         y = x;
         if (km < x->km)
@@ -493,9 +491,6 @@ void stationtree_insert(station** root, int km) {
     else
         y->right = t;
 
-    t->left = NULL;
-    t->right = NULL;
-    t->color = 'R';
     stationtree_insert_fix(root, t);
 }
 
