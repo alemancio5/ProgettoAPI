@@ -117,8 +117,8 @@ car* cartree_pre(car* node) {
 
 // Function to fix the properties of the cartree, after insertion
 void cartree_insert_fix(car** root, car* z) {
-    car* x;
-    car* y;
+    car* x = NULL;
+    car* y = NULL;
 
     if (z == *root) {
         (*root)->color = 'B';
@@ -127,7 +127,7 @@ void cartree_insert_fix(car** root, car* z) {
         if (x->color == 'R') {
             if (x == x->parent->left) {
                 y = x->parent->right;
-                if (y->color == 'R') {
+                if (y != NULL && y->color == 'R') {
                     x->color = 'B';
                     y->color = 'B';
                     x->parent->color = 'R';
@@ -142,7 +142,7 @@ void cartree_insert_fix(car** root, car* z) {
                 cartree_right(root, x->parent);
             } else {
                 y = x->parent->left;
-                if (y->color == 'R') {
+                if (y != NULL && y->color == 'R') {
                     x->color = 'B';
                     y->color = 'B';
                     x->parent->color = 'R';
@@ -184,9 +184,6 @@ void cartree_insert(car** root, int km) {
     else
         y->right = t;
 
-    t->left = NULL;
-    t->right = NULL;
-    t->color = 'R';
     cartree_insert_fix(root, t);
 }
 
@@ -258,7 +255,9 @@ void cartree_delete(car** root, car* z) {
         x = y->right;
     }
 
-    x->parent = y->parent;
+    if (x != NULL) {
+        x->parent = y->parent;
+    }
 
     if (y->parent == NULL) {
         *root = x;
@@ -272,7 +271,7 @@ void cartree_delete(car** root, car* z) {
         z->km = y->km;
     }
 
-    if (y->color == 'B') {
+    if (y->color == 'B' && x != NULL) {
         cartree_delete_fix(root, x);
     }
 
@@ -427,8 +426,8 @@ station* stationtree_pre(station* node) {
 
 // Function to fix the properties of the stationtree, after insertion
 void stationtree_insert_fix(station** root, station* z) {
-    station* x;
-    station* y;
+    station* x = NULL;
+    station* y = NULL;
 
     if (z == *root) {
         (*root)->color = 'B';
@@ -437,7 +436,7 @@ void stationtree_insert_fix(station** root, station* z) {
         if (x->color == 'R') {
             if (x == x->parent->left) {
                 y = x->parent->right;
-                if (y->color == 'R') {
+                if (y != NULL && y->color == 'R') {
                     x->color = 'B';
                     y->color = 'B';
                     x->parent->color = 'R';
@@ -452,7 +451,7 @@ void stationtree_insert_fix(station** root, station* z) {
                 stationtree_right(root, x->parent);
             } else {
                 y = x->parent->left;
-                if (y->color == 'R') {
+                if (y != NULL && y->color == 'R') {
                     x->color = 'B';
                     y->color = 'B';
                     x->parent->color = 'R';
@@ -568,7 +567,9 @@ void stationtree_delete(station ** root, station* z) {
         x = y->right;
     }
 
-    x->parent = y->parent;
+    if (x != NULL) {
+        x->parent = y->parent;
+    }
 
     if (y->parent == NULL) {
         *root = x;
@@ -582,7 +583,7 @@ void stationtree_delete(station ** root, station* z) {
         z->km = y->km;
     }
 
-    if (y->color == 'B') {
+    if (y->color == 'B' && x != NULL) {
         stationtree_delete_fix(root, x);
     }
 
