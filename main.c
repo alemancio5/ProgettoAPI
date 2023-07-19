@@ -190,72 +190,56 @@ car* cartree_max(car* node) {
     return node;
 }
 
-// Function to find the station with the minimum km in the cartree
-car* cartree_min(car* node) {
-    while (node->left != NULL)
-        node = node->left;
-    return node;
-}
-
-// Function to transplant a tree in the cartree
-void cartree_transplant(car** root, car* u, car* v) {
-    if (u->parent == NULL) {
-        // u is the root node
-        *root = v;
-    } else if (u == u->parent->left) {
-        // u is a left child
-        u->parent->left = v;
-    } else {
-        // u is a right child
-        u->parent->right = v;
-    }
-
-    if (v != NULL) {
-        v->parent = u->parent;
-    }
-}
-
 // Function to delete a node from the cartree
 void cartree_delete(car ** root, car* z) {
     car* y = z;
     car* x = NULL;
     char original_color = y->color;
 
-    // If the node has at most one child, splice it out directly
     if (z->left == NULL) {
         x = z->right;
-        cartree_fix(root, z->right);
-        cartree_transplant(root, z, z->right);
+        if (z->parent == NULL)
+            *root = z->right;
+        else if (z == z->parent->left)
+            z->parent->left = z->right;
+        else
+            z->parent->right = z->right;
     } else if (z->right == NULL) {
         x = z->left;
-        cartree_fix(root, z->left);
-        cartree_transplant(root, z, z->left);
+        if (z->parent == NULL)
+            *root = z->left;
+        else if (z == z->parent->left)
+            z->parent->left = z->left;
+        else
+            z->parent->right = z->left;
     } else {
-        // If the node has two children, find the successor and splice it out
-        y = cartree_min(z->right);
+        y = z->right;
+        while (y->left != NULL)
+            y = y->left;
         original_color = y->color;
         x = y->right;
-
-        if (y->parent == z) {
-            if (x != NULL)
-                x->parent = y;
-        } else {
-            cartree_transplant(root, y, y->right);
+        if (y->parent == z)
+            x->parent = y;
+        else {
+            if (y->parent == NULL)
+                *root = y->right;
+            else if (y == y->parent->left)
+                y->parent->left = y->right;
+            else
+                y->parent->right = y->right;
+            y->right->parent = y->parent;
             y->right = z->right;
             y->right->parent = y;
         }
-
-        cartree_transplant(root, z, y);
         y->left = z->left;
         y->left->parent = y;
         y->color = z->color;
     }
 
-    free(z);
-
-    // If we removed a black node, we have to fix the stationtree
     if (original_color == 'B')
         cartree_fix(root, x);
+
+    free(z);
 }
 
 // Structure to represent a station in the stationtree
@@ -431,73 +415,57 @@ station* stationtree_search(station* root, int km) {
     return NULL;
 }
 
-// Function to find the station with the minimum km in the stationtree
-station* stationtree_min(station* node) {
-    while (node->left != NULL)
-        node = node->left;
-    return node;
-}
-
-// Function to transplant a tree in the stationtree
-void stationtree_transplant(station** root, station* u, station* v) {
-    if (u->parent == NULL) {
-        // u is the root node
-        *root = v;
-    } else if (u == u->parent->left) {
-        // u is a left child
-        u->parent->left = v;
-    } else {
-        // u is a right child
-        u->parent->right = v;
-    }
-
-    if (v != NULL) {
-        v->parent = u->parent;
-    }
-}
-
 // Function to delete a node from the stationtree
 void stationtree_delete(station ** root, station* z) {
     station* y = z;
     station* x = NULL;
     char original_color = y->color;
 
-    // If the node has at most one child, splice it out directly
     if (z->left == NULL) {
         x = z->right;
-        stationtree_fix(root, z->right);
-        stationtree_transplant(root, z, z->right);
+        if (z->parent == NULL)
+            *root = z->right;
+        else if (z == z->parent->left)
+            z->parent->left = z->right;
+        else
+            z->parent->right = z->right;
     } else if (z->right == NULL) {
         x = z->left;
-        stationtree_fix(root, z->left);
-        stationtree_transplant(root, z, z->left);
+        if (z->parent == NULL)
+            *root = z->left;
+        else if (z == z->parent->left)
+            z->parent->left = z->left;
+        else
+            z->parent->right = z->left;
     } else {
-        // If the node has two children, find the successor and splice it out
-        y = stationtree_min(z->right);
+        y = z->right;
+        while (y->left != NULL)
+            y = y->left;
         original_color = y->color;
         x = y->right;
-
-        if (y->parent == z) {
-            if (x != NULL)
-                x->parent = y;
-        } else {
-            stationtree_transplant(root, y, y->right);
+        if (y->parent == z)
+            x->parent = y;
+        else {
+            if (y->parent == NULL)
+                *root = y->right;
+            else if (y == y->parent->left)
+                y->parent->left = y->right;
+            else
+                y->parent->right = y->right;
+            y->right->parent = y->parent;
             y->right = z->right;
             y->right->parent = y;
         }
-
-        stationtree_transplant(root, z, y);
         y->left = z->left;
         y->left->parent = y;
         y->color = z->color;
     }
 
-    cartree_free(z->cartree);
-    free(z);
-
-    // If we removed a black node, we have to fix the stationtree
     if (original_color == 'B')
         stationtree_fix(root, x);
+
+    cartree_free(z->cartree);
+    free(z);
 }
 
 // Function to free the memory used by stationtree
@@ -534,6 +502,7 @@ int main() {
     car* c = NULL; // Car pointer
 
     int s_km; // Station km
+    int c_num; // Car number
     int c_km; // Car km
 
     int begin; // Start of the path
@@ -549,8 +518,8 @@ int main() {
                     stationtree_insert(&stationtree, s_km);
                     s = stationtree_search(stationtree, s_km);
                     scanf("%s", input);
-                    int k = atoi(input);
-                    for (int i = 0; i < k; i++) {
+                    c_num = atoi(input);
+                    for (int i = 0; i < c_num; i++) {
                         scanf("%s", input);
                         c_km = atoi(input);
                         cartree_insert(&(s->cartree), c_km);
