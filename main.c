@@ -600,11 +600,15 @@ void path_forward(station* root, int begin, int end) {
         }
     }
 
-    printf("%d ", begin); // Print the starting station
-    for (int i = 0; i < num_inter; i++) { // Print the intermediate stations
-        printf("%d ", inter[i]);
+    if (num_inter != 0) {
+        printf("%d ", begin); // Print the starting station
+        for (int i = 0; i < num_inter; i++) { // Print the intermediate stations
+            printf("%d ", inter[i]);
+        }
+        printf("%d\n", end); // Print the ending station
+    } else {
+        printf("nessun percorso\n");
     }
-    printf("%d\n", end); // Print the ending station
 }
 
 // Function to calculate the number of stations seen from a step
@@ -667,11 +671,15 @@ void path_back(station* root, int begin, int end) {
         }
     }
 
-    printf("%d ", begin); // Print the starting station
-    for (int i = 0; i < num_inter; i++) { // Print the intermediate stations
-        printf("%d ", inter[i]);
+    if (num_inter != 0) {
+        printf("%d ", begin); // Print the starting station
+        for (int i = 0; i < num_inter; i++) { // Print the intermediate stations
+            printf("%d ", inter[i]);
+        }
+        printf("%d\n", end); // Print the ending station
+    } else {
+        printf("nessun percorso\n");
     }
-    printf("%d\n", end); // Print the ending station
 }
 
 int main() {
@@ -692,16 +700,22 @@ int main() {
     while (scanf("%s", input) != EOF) {
         if (input[0] == 'a') { // "aggiungi-"
             if (input[9] == 's') { // "stazione"
-                scanf("%s", input);
+                if (scanf("%s", input) == EOF) {
+                    return 0;
+                }
                 s_km = atoi(input);
                 s = stationtree_search(stationtree, s_km);
                 if (s == NULL) {
                     stationtree_insert(&stationtree, s_km);
                     s = stationtree_search(stationtree, s_km);
-                    scanf("%s", input);
+                    if (scanf("%s", input) == EOF) {
+                        return 0;
+                    }
                     c_num = atoi(input);
                     for (int i = 0; i < c_num; i++) {
-                        scanf("%s", input);
+                        if (scanf("%s", input) == EOF) {
+                            return 0;
+                        }
                         c_km = atoi(input);
                         cartree_insert(&(s->cartree), c_km);
                         if (c_km > s->carmax) {
@@ -713,9 +727,13 @@ int main() {
                     printf("non aggiunta\n");
                 }
             } else if (input[9] == 'a') { // "auto"
-                scanf("%s", input);
+                if (scanf("%s", input) == EOF) {
+                    return 0;
+                }
                 s_km = atoi(input);
-                scanf("%s", input);
+                if (scanf("%s", input) == EOF) {
+                    return 0;
+                }
                 c_km = atoi(input);
                 s = stationtree_search(stationtree, s_km);
                 if (s != NULL) {
@@ -729,7 +747,9 @@ int main() {
                 }
             }
         } else if (input[0] == 'd') { // "demolisci-stazione"
-            scanf("%s", input);
+            if (scanf("%s", input) == EOF) {
+                return 0;
+            }
             s_km = atoi(input);
             s = stationtree_search(stationtree, s_km);
             if (s != NULL) {
@@ -739,11 +759,15 @@ int main() {
                 printf("non demolita\n");
             }
         } else if (input[0] == 'r') { // "rottama-auto"
-            scanf("%s", input);
+            if (scanf("%s", input) == EOF) {
+                return 0;
+            }
             s_km = atoi(input);
             s = stationtree_search(stationtree, s_km);
             if (s != NULL) {
-                scanf("%s", input);
+                if (scanf("%s", input) == EOF) {
+                    return 0;
+                }
                 c_km = atoi(input);
                 c = cartree_search(s->cartree, c_km);
                 if (c != NULL) {
@@ -759,9 +783,13 @@ int main() {
                 printf("non rottamata\n");
             }
         } else if (input[0] == 'p') { // "pianifica-percorso"
-            scanf("%s", input);
+            if (scanf("%s", input) == EOF) {
+                return 0;
+            }
             begin = atoi(input);
-            scanf("%s", input);
+            if (scanf("%s", input) == EOF) {
+                return 0;
+            }
             end = atoi(input);
             if (begin <= end) {
                 path_forward(stationtree, begin, end);
@@ -770,7 +798,5 @@ int main() {
             }
         }
     }
-    printf("\n\n");
-    stationtree_print(stationtree);
     return 0;
 }
