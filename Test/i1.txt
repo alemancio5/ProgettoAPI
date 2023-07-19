@@ -1,9 +1,8 @@
-aggiungi-stazione 10 1 20
-aggiungi-stazione 20 1 30
+aggiungi-stazione 10 1 49
+aggiungi-stazione 20 1 38
 aggiungi-stazione 30 1 10
-aggiungi-stazione 40 1 5
-aggiungi-stazione 50 1 5
-aggiungi-stazione 60 1 60
+aggiungi-stazione 40 1 10
+aggiungi-stazione 50 1 10
+aggiungi-stazione 60 0
 pianifica-percorso 10 60
-pianifica-percorso 40 60
 
