@@ -117,55 +117,47 @@ car* cartree_pre(car* node) {
 
 // Function to fix the properties of the cartree, after insertion
 void cartree_insert_fix(car** root, car* z) {
-    while (z != *root && z->parent->color == 'R') {
-        car* grandparent = z->parent->parent;
+    car* x;
+    car* y;
 
-        if (z->parent == grandparent->left) {
-            car* uncle = grandparent->right;
-
-            // Case 1: Uncle is red
-            if (uncle != NULL && uncle->color == 'R') {
-                z->parent->color = 'B';
-                uncle->color = 'B';
-                grandparent->color = 'R';
-                z = grandparent;
-            } else {
-                // Case 2: Uncle is black, and z is a right child
-                if (z == z->parent->right) {
-                    z = z->parent;
+    if (z == *root) {
+        (*root)->color = 'B';
+    } else {
+        x = z->parent;
+        if (x->color == 'R') {
+            if (x == x->parent->left) {
+                y = x->parent->right;
+                if (y->color == 'R') {
+                    x->color = 'B';
+                    y->color = 'B';
+                    x->parent->color = 'R';
+                    stationtree_insert_fix(root, x->parent);
+                } else if (z == x->right) {
+                    z = x;
                     cartree_left(root, z);
+                    x = z->parent;
                 }
-
-                // Case 3: Uncle is black, and z is a left child
-                z->parent->color = 'B';
-                grandparent->color = 'R';
-                cartree_right(root, grandparent);
-            }
-        } else {
-            car* uncle = grandparent->left;
-
-            // Case 1: Uncle is red
-            if (uncle != NULL && uncle->color == 'R') {
-                z->parent->color = 'B';
-                uncle->color = 'B';
-                grandparent->color = 'R';
-                z = grandparent;
+                x->color = 'B';
+                x->parent->color = 'R';
+                cartree_right(root, x->parent);
             } else {
-                // Case 2: Uncle is black, and z is a left child
-                if (z == z->parent->left) {
-                    z = z->parent;
+                y = x->parent->left;
+                if (y->color == 'R') {
+                    x->color = 'B';
+                    y->color = 'B';
+                    x->parent->color = 'R';
+                    stationtree_insert_fix(root, x->parent);
+                } else if (z == x->left) {
+                    z = x;
                     cartree_right(root, z);
+                    x = z->parent;
                 }
-
-                // Case 3: Uncle is black, and z is a right child
-                z->parent->color = 'B';
-                grandparent->color = 'R';
-                cartree_left(root, grandparent);
+                x->color = 'B';
+                x->parent->color = 'R';
+                cartree_left(root, x->parent);
             }
         }
     }
-
-    (*root)->color = 'B'; // Ensure the root is always black
 }
 
 // Function to insert a new station into the cartree
@@ -174,7 +166,7 @@ void cartree_insert(car** root, int km) {
     car* y = NULL;
     car* x = *root;
 
-    // Find the position to insert the new car
+    // Find the position to insert the new station
     while (x != NULL) {
         y = x;
         if (km < x->km)
@@ -192,8 +184,10 @@ void cartree_insert(car** root, int km) {
     else
         y->right = t;
 
-    // Fix the properties of the cartree, if they are violated
-    cartree_insert_fix(root, t);
+    t->left = NULL;
+    t->right = NULL;
+    t->color = 'R';
+    stationtree_insert_fix(root, t);
 }
 
 // Function to fix up the cartree after deletion
@@ -433,55 +427,47 @@ station* stationtree_pre(station* node) {
 
 // Function to fix the properties of the stationtree, after insertion
 void stationtree_insert_fix(station** root, station* z) {
-    while (z != *root && z->parent->color == 'R') {
-        station* grandparent = z->parent->parent;
+    station* x;
+    station* y;
 
-        if (z->parent == grandparent->left) {
-            station* uncle = grandparent->right;
-
-            // Case 1: Uncle is red
-            if (uncle != NULL && uncle->color == 'R') {
-                z->parent->color = 'B';
-                uncle->color = 'B';
-                grandparent->color = 'R';
-                z = grandparent;
-            } else {
-                // Case 2: Uncle is black, and z is a right child
-                if (z == z->parent->right) {
-                    z = z->parent;
+    if (z == *root) {
+        (*root)->color = 'B';
+    } else {
+        x = z->parent;
+        if (x->color == 'R') {
+            if (x == x->parent->left) {
+                y = x->parent->right;
+                if (y->color == 'R') {
+                    x->color = 'B';
+                    y->color = 'B';
+                    x->parent->color = 'R';
+                    stationtree_insert_fix(root, x->parent);
+                } else if (z == x->right) {
+                    z = x;
                     stationtree_left(root, z);
+                    x = z->parent;
                 }
-
-                // Case 3: Uncle is black, and z is a left child
-                z->parent->color = 'B';
-                grandparent->color = 'R';
-                stationtree_right(root, grandparent);
-            }
-        } else {
-            station* uncle = grandparent->left;
-
-            // Case 1: Uncle is red
-            if (uncle != NULL && uncle->color == 'R') {
-                z->parent->color = 'B';
-                uncle->color = 'B';
-                grandparent->color = 'R';
-                z = grandparent;
+                x->color = 'B';
+                x->parent->color = 'R';
+                stationtree_right(root, x->parent);
             } else {
-                // Case 2: Uncle is black, and z is a left child
-                if (z == z->parent->left) {
-                    z = z->parent;
+                y = x->parent->left;
+                if (y->color == 'R') {
+                    x->color = 'B';
+                    y->color = 'B';
+                    x->parent->color = 'R';
+                    stationtree_insert_fix(root, x->parent);
+                } else if (z == x->left) {
+                    z = x;
                     stationtree_right(root, z);
+                    x = z->parent;
                 }
-
-                // Case 3: Uncle is black, and z is a right child
-                z->parent->color = 'B';
-                grandparent->color = 'R';
-                stationtree_left(root, grandparent);
+                x->color = 'B';
+                x->parent->color = 'R';
+                stationtree_left(root, x->parent);
             }
         }
     }
-
-    (*root)->color = 'B'; // Ensure the root is always black
 }
 
 // Function to insert a new station into the stationtree
@@ -508,7 +494,9 @@ void stationtree_insert(station** root, int km) {
     else
         y->right = t;
 
-    // Fix the properties of the stationtree, if they are violated
+    t->left = NULL;
+    t->right = NULL;
+    t->color = 'R';
     stationtree_insert_fix(root, t);
 }
 
