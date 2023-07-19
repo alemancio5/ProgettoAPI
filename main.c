@@ -131,7 +131,7 @@ void cartree_insert_fix(car** root, car* z) {
                     x->color = 'B';
                     y->color = 'B';
                     x->parent->color = 'R';
-                    stationtree_insert_fix(root, x->parent);
+                    cartree_insert_fix(root, x->parent);
                 } else if (z == x->right) {
                     z = x;
                     cartree_left(root, z);
@@ -146,7 +146,7 @@ void cartree_insert_fix(car** root, car* z) {
                     x->color = 'B';
                     y->color = 'B';
                     x->parent->color = 'R';
-                    stationtree_insert_fix(root, x->parent);
+                    cartree_insert_fix(root, x->parent);
                 } else if (z == x->left) {
                     z = x;
                     cartree_right(root, z);
@@ -187,7 +187,7 @@ void cartree_insert(car** root, int km) {
     t->left = NULL;
     t->right = NULL;
     t->color = 'R';
-    stationtree_insert_fix(root, t);
+    cartree_insert_fix(root, t);
 }
 
 // Function to fix up the cartree after deletion
