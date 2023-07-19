@@ -160,16 +160,6 @@ void cartree_print(car* root) {
     cartree_print(root->right);
 }
 
-// Function to free the memory used by cartree
-void cartree_free(car* root) {
-    if (root == NULL)
-        return;
-
-    cartree_free(root->left);
-    cartree_free(root->right);
-    free(root);
-}
-
 // Function to find a car in the cartree
 car* cartree_search(car* root, int km) {
     while (root != NULL) {
@@ -240,6 +230,16 @@ void cartree_delete(car ** root, car* z) {
         cartree_fix(root, x);
 
     free(z);
+}
+
+// Function to free the memory used by cartree
+void cartree_free(car* root) {
+    if (root == NULL)
+        return;
+
+    cartree_free(root->left);
+    cartree_free(root->right);
+    free(root);
 }
 
 // Structure to represent a station in the stationtree
@@ -415,6 +415,17 @@ station* stationtree_search(station* root, int km) {
     return NULL;
 }
 
+// Function to find the minimum node in the stationtree
+station* stationtree_min(station* node) {
+    if (node == NULL)
+        return NULL;
+
+    while (node->left != NULL)
+        node = node->left;
+
+    return node;
+}
+
 // Function to delete a node from the stationtree
 void stationtree_delete(station ** root, station* z) {
     station* y = z;
@@ -468,17 +479,6 @@ void stationtree_delete(station ** root, station* z) {
     free(z);
 }
 
-// Function to find the minimum node in the stationtree
-station* stationtree_min(station* node) {
-    if (node == NULL)
-        return NULL;
-
-    while (node->left != NULL)
-        node = node->left;
-
-    return node;
-}
-
 // Function to find the successor of a node in the stationtree
 station* stationtree_suc(station* node) {
     if (node->right != NULL) {
@@ -507,6 +507,7 @@ void stationtree_free(station* root) {
     free(root);
 }
 
+// Function to calculate the number of stations seen from a step
 int view_forward(station* root, int end) {
     int result = 0;
     station* i = root;
@@ -521,7 +522,7 @@ int view_forward(station* root, int end) {
     return result;
 }
 
-// Function for front paths
+// Function for forward paths
 void path_forward(station* root, int begin, int end) {
     if (begin == end) { // If there is no movement
         printf("%d\n", begin);
@@ -559,6 +560,7 @@ void path_forward(station* root, int begin, int end) {
         }
         if (best_view != NULL) { // If the best step is found
             base = best_view;
+            step = stationtree_suc(best_view);
             inter[num_inter] = best_view->km;
             num_inter++;
         } else { // If there are no steps to reach the end

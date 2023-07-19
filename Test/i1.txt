@@ -1,8 +1,13 @@
-aggiungi-stazione 10 1 49
-aggiungi-stazione 20 1 38
-aggiungi-stazione 30 1 10
-aggiungi-stazione 40 1 10
-aggiungi-stazione 50 1 10
-aggiungi-stazione 60 0
-pianifica-percorso 10 60
-
+aggiungi-stazione 20 3 5 10 15
+aggiungi-stazione 4 3 1 2 3
+aggiungi-stazione 30 0
+demolisci-stazione 3
+demolisci-stazione 4
+aggiungi-auto 30 40
+aggiungi-stazione 50 3 20 25 7
+rottama-auto 20 8
+rottama-auto 9999 5
+rottama-auto 50 7
+pianifica-percorso 20 30
+pianifica-percorso 20 50
+aggiungi-auto 50 30
