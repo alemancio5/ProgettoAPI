@@ -1,5 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <math.h>
+
+#define MAX_INPUT 50
 
 // Structure to represent a station in the cartree
 struct carnode {
@@ -151,7 +156,7 @@ void cartree_print(car* root) {
         return;
 
     cartree_print(root->left);
-    printf("%d (%c) ", root->km, root->color);
+    printf("%d ", root->km, root->color);
     cartree_print(root->right);
 }
 
@@ -407,7 +412,9 @@ void stationtree_print(station* root) {
         return;
 
     stationtree_print(root->left);
-    printf("%d (%c) ", root->km, root->color);
+    printf("%d [ ", root->km, root->color);
+    cartree_print(root->cartree);
+    printf("]\n");
     stationtree_print(root->right);
 }
 
@@ -511,7 +518,6 @@ void path_front (station* root, int begin, int end) {
         return;
     }
 
-    station* b = stationtree_search(root, begin); // Begin node
 }
 
 // Function for back paths
@@ -522,14 +528,16 @@ void path_back (station* root, int start, int end) {
 int main() {
     station* stationtree = NULL; // The stationtree
 
-    char input[50]; // Input buffer
+    char input[MAX_INPUT]; // Input buffer for strings
+
     station* s = NULL; // Station pointer
     car* c = NULL; // Car pointer
-    int s_km = 0; // Station km
-    int c_km = 0; // Car km
 
-    int begin = 0; // Start of the path
-    int end = 0; // End of the path
+    int s_km; // Station km
+    int c_km; // Car km
+
+    int begin; // Start of the path
+    int end; // End of the path
 
     while (scanf("%s", input) != EOF) {
         if (input[0] == 'a') { // "aggiungi-"
@@ -540,7 +548,10 @@ int main() {
                 if (s == NULL) {
                     stationtree_insert(&stationtree, s_km);
                     s = stationtree_search(stationtree, s_km);
-                    while (scanf("%s", input) != '\n') {
+                    scanf("%s", input);
+                    int k = atoi(input);
+                    for (int i = 0; i < k; i++) {
+                        scanf("%s", input);
                         c_km = atoi(input);
                         cartree_insert(&(s->cartree), c_km);
                         if (c_km > s->carmax) {
