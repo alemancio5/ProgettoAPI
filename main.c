@@ -1,572 +1,215 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
-#define MAX_INPUT 1000
-#define MAX_INTER 1000
+#define MAX_INPUT 30
 
 // Structure to represent a station in the cartree
 struct carnode {
     int km;
-    char color;
-    struct carnode* left;
-    struct carnode* right;
-    struct carnode* parent;
+    struct carnode* next;
 };
 typedef struct carnode car;
-
-car* carnil;
 
 // Function to create a new station for the cartree
 car* cartree_create(int km) {
     car* t = (car*)malloc(sizeof(car));
     t->km = km;
-    t->color = 'R'; // New stations are always inserted as red
-    t->left = carnil;
-    t->right = carnil;
-    t->parent = carnil;
+    t->next = NULL;
     return t;
-}
-
-// Function to perform left rotation in the cartree
-void cartree_left(car** root, car* x) {
-    car* y = x->right;
-    x->right = y->left;
-
-    if (y->left != carnil)
-        y->left->parent = x;
-
-    y->parent = x->parent;
-
-    if (x->parent == carnil)
-        *root = y;
-    else if (x == x->parent->left)
-        x->parent->left = y;
-    else
-        x->parent->right = y;
-
-    y->left = x;
-    x->parent = y;
-}
-
-// Function to perform right rotation in the cartree
-void cartree_right(car** root, car* y) {
-    car* x = y->left;
-    y->left = x->right;
-
-    if (x->right != carnil)
-        x->right->parent = y;
-
-    x->parent = y->parent;
-
-    if (y->parent == carnil)
-        *root = x;
-    else if (y == y->parent->left)
-        y->parent->left = x;
-    else
-        y->parent->right = x;
-
-    x->right = y;
-    y->parent = x;
-}
-
-// Function to find the minimum node in the cartree
-car* cartree_min(car* node) {
-    if (node == carnil)
-        return carnil;
-    while (node->left != carnil)
-        node = node->left;
-    return node;
 }
 
 // Function to find the maximum node in the cartree
 car* cartree_max(car* node) {
-    if (node == carnil)
-        return carnil;
-    while (node->right != carnil)
-        node = node->right;
-    return node;
-}
+    int max = -1;
+    car* saved = NULL;
 
-// Function to find the successor of a node in the cartree
-car* cartree_suc(car* node) {
-    if (node->right != carnil) {
-        return cartree_min(node->right);
-    } else {
-        car* parent = node->parent;
-        while (parent != carnil && node == parent->right) {
-            node = parent;
-            parent = node->parent;
+    while (node != NULL) {
+        if (max < node->km) {
+            max = node->km;
+            saved = node;
         }
-        return parent;
+        node = node->next;
     }
+
+    return saved;
 }
 
-// Function to find the predecessor of a node in the cartree
-car* cartree_pre(car* node) {
-    if (node->left != carnil) {
-        return cartree_max(node->left);
-    } else {
-        car* parent = node->parent;
-        while (parent != carnil && node == parent->left) {
-            node = parent;
-            parent = node->parent;
-        }
-        return parent;
-    }
-}
-
-// Function to fix the properties of the cartree, after insertion
-void cartree_insert_fix(car** root, car* z) {
-    car* x;
-    car* y;
-
-    if (z == *root) {
-        (*root)->color = 'B';
-    } else {
-        x = z->parent;
-        if (x->color == 'R') {
-            if (x == x->parent->left) {
-                y = x->parent->right;
-                if (y->color == 'R') {
-                    x->color = 'B';
-                    y->color = 'B';
-                    x->parent->color = 'R';
-                    cartree_insert_fix(root, x->parent);
-                } else if (z == x->right) {
-                    z = x;
-                    cartree_left(root, z);
-                    x = z->parent;
-                }
-                x->color = 'B';
-                x->parent->color = 'R';
-                cartree_right(root, x->parent);
-            } else {
-                y = x->parent->left;
-                if (y->color == 'R') {
-                    x->color = 'B';
-                    y->color = 'B';
-                    x->parent->color = 'R';
-                    cartree_insert_fix(root, x->parent);
-                } else if (z == x->left) {
-                    z = x;
-                    cartree_right(root, z);
-                    x = z->parent;
-                }
-                x->color = 'B';
-                x->parent->color = 'R';
-                cartree_left(root, x->parent);
-            }
-        }
-    }
-}
-
-// Function to insert a new station into the cartree
-void cartree_insert(car** root, int km) {
+// Function to insert a node into the cartree
+void cartree_insert(car** head, int km) {
     car* t = cartree_create(km);
-    car* y = carnil;
-    car* x = *root;
-
-    while (x != carnil) {
-        y = x;
-        if (km < x->km)
-            x = x->left;
-        else
-            x = x->right;
-    }
-
-    t->parent = y;
-
-    if (y == carnil)
-        *root = t;
-    else if (km < y->km)
-        y->left = t;
-    else
-        y->right = t;
-
-    cartree_insert_fix(root, t);
-}
-
-// Function to fix up the cartree after deletion
-void cartree_delete_fix(car** root, car* x) {
-    car* w;
-
-    if (x->color == 'R' || x->parent == carnil) {
-        x->color = 'B';
-    } else if (x == x->parent->left) {
-        w = x->parent->right;
-        if (w->color == 'R') {
-            w->color = 'B';
-            x->parent->color = 'R';
-            cartree_left(root, x->parent);
-            w = x->parent->right;
-        }
-        if (w->left->color == 'B' && w->right->color == 'B') {
-            w->color = 'R';
-            cartree_delete_fix(root, x->parent);
-        } else if (w->right->color == 'B') {
-            w->left->color = 'B';
-            w->color = 'R';
-            cartree_right(root, w);
-            w = x->parent->right;
-        }
-        w->color = x->parent->color;
-        x->parent->color = 'B';
-        w->right->color = 'B';
-        cartree_left(root, x->parent);
-    } else {
-        w = x->parent->left;
-        if (w->color == 'R') {
-            w->color = 'B';
-            x->parent->color = 'R';
-            cartree_right(root, x->parent);
-            w = x->parent->left;
-        }
-        if (w->right->color == 'B' && w->left->color == 'B') {
-            w->color = 'R';
-            cartree_delete_fix(root, x->parent);
-        } else if (w->left->color == 'B') {
-            w->right->color = 'B';
-            w->color = 'R';
-            cartree_left(root, w);
-            w = x->parent->left;
-        }
-        w->color = x->parent->color;
-        x->parent->color = 'B';
-        w->left->color = 'B';
-        cartree_right(root, x->parent);
-    }
+    t->next = *head;
+    *head = t;
 }
 
 // Function to delete a node from the cartree
-void cartree_delete(car** root, car* z) {
-    car* y;
-    car* x;
+void cartree_delete(car** head, int km) {
+    car* q = *head;
+    car* p = NULL;
 
-    if (z->left == carnil || z->right == carnil) {
-        y = z;
+    while (q != NULL) {
+        if (q->km == km) {
+            break;
+        }
+        p = q;
+        q = q->next;
+    }
+
+    if (q != NULL) {
+        if (p == NULL) {
+            *head = q->next;
+        } else {
+            p->next = q->next;
+        }
+        free(q);
+        printf("rottamata\n");
     } else {
-        y = cartree_suc(z);
+        printf("non rottamata\n");
     }
-
-    if (y->left != carnil) {
-        x = y->left;
-    } else {
-        x = y->right;
-    }
-
-    x->parent = y->parent;
-
-    if (y->parent == carnil) {
-        *root = x;
-    } else if (y == y->parent->left) {
-        y->parent->left = x;
-    } else {
-        y->parent->right = x;
-    }
-
-    if (y != z) {
-        z->km = y->km;
-    }
-
-    if (y->color == 'B') {
-        cartree_delete_fix(root, x);
-    }
-
-    free(y);
 }
 
-// Function to find a car in the cartree
-car* cartree_search(car* root, int km) {
-    while (root != carnil) {
-        if (km == root->km)
-            return root;
-        else if (km < root->km)
-            root = root->left;
-        else
-            root = root->right;
+// Function to print cartree in-order
+void cartree_print(car* head) {
+    car* i = head;
+
+    while (i != NULL) {
+        printf("%d ", i->km);
+        i = i->next;
     }
-    return carnil;
 }
 
-// Function to traverse and print the cartree in-order
-void cartree_print(car* root) {
-    if (root == carnil)
-        return;
+// Function to free the memory of a cartree
+void cartree_free(car* head) {
+    car* t = NULL;
 
-    cartree_print(root->left);
-    printf("%d ", root->km);
-    cartree_print(root->right);
-}
-
-// Function to free the memory used by cartree
-void cartree_free(car* root) {
-    if (root == carnil)
-        return;
-
-    cartree_free(root->left);
-    cartree_free(root->right);
-    free(root);
+    while (head != NULL) {
+        t = head;
+        head = head->next;
+        free(t);
+    }
 }
 
 // Structure to represent a station in the stationtree
 struct stationnode {
     int km;
-    char color;
+    car* cartree;
+    int carmax;
     struct stationnode* left;
     struct stationnode* right;
     struct stationnode* parent;
-    car* cartree;
-    int carmax;
 };
 typedef struct stationnode station;
-
-station* stationnil;
 
 // Function to create a new station for the stationtree
 station* stationtree_create(int km) {
     station* t = (station*)malloc(sizeof(station));
     t->km = km;
-    t->color = 'R'; // New stations are always inserted as red
-    t->left = stationnil;
-    t->right = stationnil;
-    t->parent = stationnil;
-    t->cartree = carnil;
+    t->cartree = NULL;
     t->carmax = 0;
+    t->left = NULL;
+    t->right = NULL;
+    t->parent = NULL;
     return t;
-}
-
-// Function to perform left rotation in the stationtree
-void stationtree_left(station** root, station* x) {
-    station* y = x->right;
-    x->right = y->left;
-
-    if (y->left != stationnil)
-        y->left->parent = x;
-
-    y->parent = x->parent;
-
-    if (x->parent == stationnil)
-        *root = y;
-    else if (x == x->parent->left)
-        x->parent->left = y;
-    else
-        x->parent->right = y;
-
-    y->left = x;
-    x->parent = y;
-}
-
-// Function to perform right rotation in the stationtree
-void stationtree_right(station** root, station* y) {
-    station* x = y->left;
-    y->left = x->right;
-
-    if (x->right != stationnil)
-        x->right->parent = y;
-
-    x->parent = y->parent;
-
-    if (y->parent == stationnil)
-        *root = x;
-    else if (y == y->parent->left)
-        y->parent->left = x;
-    else
-        y->parent->right = x;
-
-    x->right = y;
-    y->parent = x;
 }
 
 // Function to find the minimum node in the stationtree
 station* stationtree_min(station* node) {
-    if (node == stationnil)
-        return stationnil;
-    while (node->left != stationnil)
+    if (node == NULL)
+        return NULL;
+
+    while (node->left != NULL)
         node = node->left;
     return node;
 }
 
 // Function to find the maximum node in the stationtree
 station* stationtree_max(station* node) {
-    if (node == stationnil)
-        return stationnil;
-    while (node->right != stationnil)
+    if (node == NULL)
+        return NULL;
+
+    while (node->right != NULL)
         node = node->right;
     return node;
 }
 
 // Function to find the successor of a node in the stationtree
 station* stationtree_suc(station* node) {
-    if (node->right != stationnil) {
+    station* parent = NULL;
+
+    if (node->right != NULL) {
         return stationtree_min(node->right);
-    } else {
-        station* parent = node->parent;
-        while (parent != stationnil && node == parent->right) {
-            node = parent;
-            parent = node->parent;
-        }
-        return parent;
     }
+    parent = node->parent;
+    while (parent != NULL && node == parent->right) {
+        node = parent;
+        parent = parent->parent;
+    }
+
+    return parent;
 }
 
 // Function to find the predecessor of a node in the stationtree
 station* stationtree_pre(station* node) {
-    if (node->left != stationnil) {
+    station* parent = NULL;
+
+    if (node->left != NULL) {
         return stationtree_max(node->left);
-    } else {
-        station* parent = node->parent;
-        while (parent != stationnil && node == parent->left) {
-            node = parent;
-            parent = node->parent;
-        }
-        return parent;
     }
+    parent = node->parent;
+    while (parent != NULL && node == parent->left) {
+        node = parent;
+        parent = parent->parent;
+    }
+
+    return parent;
 }
 
-// Function to fix the properties of the stationtree, after insertion
-void stationtree_insert_fix(station** root, station* z) {
-    station* x;
-    station* y;
-
-    if (z == *root) {
-        (*root)->color = 'B';
-    } else {
-        x = z->parent;
-        if (x->color == 'R') {
-            if (x == x->parent->left) {
-                y = x->parent->right;
-                if (y->color == 'R') {
-                    x->color = 'B';
-                    y->color = 'B';
-                    x->parent->color = 'R';
-                    stationtree_insert_fix(root, x->parent);
-                } else if (z == x->right) {
-                    z = x;
-                    stationtree_left(root, z);
-                    x = z->parent;
-                }
-                x->color = 'B';
-                x->parent->color = 'R';
-                stationtree_right(root, x->parent);
-            } else {
-                y = x->parent->left;
-                if (y->color == 'R') {
-                    x->color = 'B';
-                    y->color = 'B';
-                    x->parent->color = 'R';
-                    stationtree_insert_fix(root, x->parent);
-                } else if (z == x->left) {
-                    z = x;
-                    stationtree_right(root, z);
-                    x = z->parent;
-                }
-                x->color = 'B';
-                x->parent->color = 'R';
-                stationtree_left(root, x->parent);
-            }
-        }
-    }
-}
-
-// Function to insert a new station into the stationtree
+// Function to insert a node into the stationtree
 void stationtree_insert(station** root, int km) {
-    station* t = stationtree_create(km);
-    station* y = stationnil;
+    station* z = stationtree_create(km);
+    station* y = NULL;
     station* x = *root;
 
-    while (x != stationnil) {
+    while (x != NULL) {
         y = x;
-        if (km < x->km)
+        if (z->km < x->km) {
             x = x->left;
-        else
+        } else {
             x = x->right;
+        }
     }
-
-    t->parent = y;
-
-    if (y == stationnil)
-        *root = t;
-    else if (km < y->km)
-        y->left = t;
-    else
-        y->right = t;
-
-    stationtree_insert_fix(root, t);
-}
-
-// Function to fix up the stationtree after deletion
-void stationtree_delete_fix(station** root, station* x) {
-    station* w;
-
-    if (x->color == 'R' || x->parent == stationnil) {
-        x->color = 'B';
-    } else if (x == x->parent->left) {
-        w = x->parent->right;
-        if (w->color == 'R') {
-            w->color = 'B';
-            x->parent->color = 'R';
-            stationtree_left(root, x->parent);
-            w = x->parent->right;
-        }
-        if (w->left->color == 'B' && w->right->color == 'B') {
-            w->color = 'R';
-            stationtree_delete_fix(root, x->parent);
-        } else if (w->right->color == 'B') {
-            w->left->color = 'B';
-            w->color = 'R';
-            stationtree_right(root, w);
-            w = x->parent->right;
-        }
-        w->color = x->parent->color;
-        x->parent->color = 'B';
-        w->right->color = 'B';
-        stationtree_left(root, x->parent);
+    z->parent = y;
+    if (y == NULL) {
+        *root = z;
+    } else if (z->km < y->km) {
+        y->left = z;
     } else {
-        w = x->parent->left;
-        if (w->color == 'R') {
-            w->color = 'B';
-            x->parent->color = 'R';
-            stationtree_right(root, x->parent);
-            w = x->parent->left;
-        }
-        if (w->right->color == 'B' && w->left->color == 'B') {
-            w->color = 'R';
-            stationtree_delete_fix(root, x->parent);
-        } else if (w->left->color == 'B') {
-            w->right->color = 'B';
-            w->color = 'R';
-            stationtree_left(root, w);
-            w = x->parent->left;
-        }
-        w->color = x->parent->color;
-        x->parent->color = 'B';
-        w->left->color = 'B';
-        stationtree_right(root, x->parent);
+        y->right = z;
     }
 }
 
 // Function to delete a node from the stationtree
-void stationtree_delete(station ** root, station* z) {
-    station* y;
-    station* x;
+void stationtree_delete(station** root, station* z) {
+    station* y = NULL;
+    station* x = NULL;
 
-    if (z->left == stationnil || z->right == stationnil) {
+    if (z->left == NULL || z->right == NULL) {
         y = z;
     } else {
         y = stationtree_suc(z);
     }
 
-    if (y->left != stationnil) {
+    if (y->left != NULL) {
         x = y->left;
     } else {
         x = y->right;
     }
 
-    x->parent = y->parent;
+    if (x != NULL) {
+        x->parent = y->parent;
+    }
 
-    if (y->parent == stationnil) {
+    if (y->parent == NULL) {
         *root = x;
     } else if (y == y->parent->left) {
         y->parent->left = x;
@@ -576,229 +219,234 @@ void stationtree_delete(station ** root, station* z) {
 
     if (y != z) {
         z->km = y->km;
+        cartree_free(z->cartree);
+        z->cartree = y->cartree;
+        z->carmax = y->carmax;
+    } else {
+        cartree_free(y->cartree);
     }
-
-    if (y->color == 'B') {
-        stationtree_delete_fix(root, x);
-    }
-
-    cartree_free(y->cartree);
     free(y);
 }
 
-// Function to find a station in the stationtree
+// Function to search for a node in the stationtree
 station* stationtree_search(station* root, int km) {
-    while (root != stationnil) {
-        if (km == root->km)
-            return root;
-        else if (km < root->km)
+    while (root != NULL && root->km != km) {
+        if (km < root->km) {
             root = root->left;
-        else
-            root = root->right;
-    }
-    return stationnil;
-}
-
-// Function to traverse and print the stationtree in-order
-void stationtree_print(station* root) {
-    if (root == stationnil)
-        return;
-
-    stationtree_print(root->left);
-    printf("%d [ ", root->km);
-    cartree_print(root->cartree);
-    printf("]\n");
-    stationtree_print(root->right);
-}
-
-// Function to free the memory used by stationtree
-void stationtree_free(station* root) {
-    if (root == stationnil)
-        return;
-
-    stationtree_free(root->left);
-    stationtree_free(root->right);
-    cartree_free(root->cartree);
-    free(root);
-}
-
-// Function to calculate the number of stations seen from a step
-int forward_view(station* root, int end) {
-    int result = 0;
-    station* i = root;
-    while (i->km < end) {
-        if (i->km < end && (stationtree_suc(i)->km - root->km) <= root->carmax) {
-            result++;
-            i = stationtree_suc(i);
         } else {
-            break;
+            root = root->right;
         }
     }
-    return result;
+    return root;
+}
+
+// Function to print stationtree in-order
+void stationtree_print(station* root) {
+    if (root != NULL) {
+        stationtree_print(root->left);
+        printf("%d [ ", root->km);
+        cartree_print(root->cartree);
+        printf("] %d\n", root->carmax);
+        stationtree_print(root->right);
+    }
+}
+
+// Function to free the memory of a stationtree
+void stationtree_free(station* root) {
+    if (root != NULL) {
+        stationtree_free(root->left);
+        stationtree_free(root->right);
+        cartree_free(root->cartree);
+        free(root);
+    }
+}
+
+// structure to represent a pocket
+struct pocketnode {
+    int km;
+    struct pocketnode* next;
+};
+typedef struct pocketnode pocket;
+
+// Function to create a new pocket
+pocket* pocket_create(int km) {
+    pocket* t = (pocket*)malloc(sizeof(pocket));
+    t->km = km;
+    t->next = NULL;
+    return t;
+}
+
+// Function to insert a new poket
+void pocket_insert(pocket** root, int km) {
+    pocket* t = pocket_create(km);
+    t->next = *root;
+    *root = t;
+}
+
+// Function to print a poket
+void pocket_print(pocket* root) {
+    pocket* i = root;
+    while (i != NULL) {
+        printf("%d ", i->km);
+        i = i->next;
+    }
+}
+
+// Function to free the memory of a poket
+void pocket_free(pocket* root) {
+    if (root != NULL) {
+        pocket_free(root->next);
+        free(root);
+    }
 }
 
 // Function for forward paths
-void forward_path(station* root, int begin, int end) {
-    if (begin == end) { // If there is no movement
+void front_path(station* root, int begin, int end) {
+    // If there is no movement
+    if (begin == end) {
         printf("%d\n", begin);
         return;
     }
 
-    station* start = stationtree_search(root, begin); // Find the starting station
-    if (end - begin <= start->carmax) { // If the trip can be direct
+    // If the trip can be direct
+    station* begin_station = stationtree_search(root, begin);
+    if (end - begin <= begin_station->carmax) {
         printf("%d %d\n", begin, end);
         return;
     }
 
     // If are needed intermediate stations
-    station* step = stationtree_suc(start); // Set the first step station
-    int count_step; // Variable for the number of steps
-    station* base = start; // Set the base station
-    int view; // Variable for the view that a step has
-    int max_view; // Variable for the maximum view that the steps can have
-    station* best_view = NULL; // Variable for the best step from the current base
-    int inter[MAX_INTER]; // Array for the steps
-    int num_inter = 0; // Variable for the number of steps
-
-    while (step->km < end) { // Algorithm to catch intermediate stations
-        count_step = 1;
-        max_view = 0;
-        best_view = NULL;
-        while (step->km < end && (step->km - base->km) <= base->carmax) {
-            view = forward_view(step, end) + count_step;
-            if (max_view < view) {
-                max_view = view;
-                best_view = step;
+    station* chosen = stationtree_search(root, end);
+    station* step = stationtree_pre(chosen);
+    station* saved = NULL;
+    pocket* pocket = NULL;
+    while (begin + begin_station->carmax < chosen->km) {
+        while (step->km > begin) {
+            if (step->km + step->carmax >= chosen->km) {
+                saved = step;
             }
-            step = stationtree_suc(step);
-            count_step++;
+            step = stationtree_pre(step);
         }
-        if (best_view != NULL) { // If the best step is found
-            base = best_view;
-            step = stationtree_suc(best_view);
-            inter[num_inter] = best_view->km;
-            num_inter++;
-        } else { // If there are no steps to reach the end
+        if (saved == NULL) {
             printf("nessun percorso\n");
             return;
-        }
-        if (end - base->km <= base->carmax) { // If the trip can be direct now
-            break;
-        }
-    }
-
-    if (num_inter != 0) {
-        printf("%d ", begin); // Print the starting station
-        for (int i = 0; i < num_inter; i++) { // Print the intermediate stations
-            printf("%d ", inter[i]);
-        }
-        printf("%d\n", end); // Print the ending station
-    } else {
-        printf("nessun percorso\n");
-    }
-}
-
-// Function to calculate the number of stations seen from a step
-int back_view(station* root, int end) {
-    int result = 0;
-    station* i = root;
-    while (i->km > end) {
-        if (i->km > end && (root->km - stationtree_pre(i)->km) <= root->carmax) {
-            result++;
-            i = stationtree_pre(i);
         } else {
-            break;
+            pocket_insert(&pocket, saved->km);
+            chosen = saved;
+            step = stationtree_pre(saved);
+            saved = NULL;
         }
     }
-    return result;
+
+    // Print the path
+    printf("%d ", begin);
+    pocket_print(pocket);
+    printf("%d\n", end);
+
+    pocket_free(pocket);
 }
 
 // Function for back paths
 void back_path(station* root, int begin, int end) {
-    station* start = stationtree_search(root, begin); // Find the starting station
-    if (begin - end <= start->carmax) { // If the trip can be direct
+    // If the trip can be direct
+    station* start = stationtree_search(root, begin);
+    if (begin - end <= start->carmax) {
         printf("%d %d\n", begin, end);
         return;
     }
 
     // If are needed intermediate stations
-    station* step = stationtree_pre(start); // Set the first step station
-    int count_step; // Variable for the number of steps
-    station* base = start; // Set the base station
-    int view; // Variable for the view that a step has
-    int max_view; // Variable for the maximum view that the steps can have
-    station* best_view = NULL; // Variable for the best step from the current base
-    int inter[MAX_INTER]; // Array for the steps
-    int num_inter = 0; // Variable for the number of steps
+    station* base = start;
+    station* step = stationtree_pre(start);
+    station* test = NULL;
+    station* view = NULL;
+    station* max_view = NULL;
+    station* selected = NULL;
+    station* saved[100];
+    int length = 0;
 
-    while (step->km > end) { // Algorithm to catch intermediate stations
-        count_step = 1;
-        max_view = 0;
-        best_view = NULL;
-        while (step->km > end && (base->km - step->km) <= base->carmax) {
-            view = back_view(step, end) + count_step;
-            if (max_view <= view) {
+    saved[0] = start;
+    length++;
+
+    while (base->km - base->carmax > end) {
+        while (step->km > end && base->km - base->carmax <= step->km) {
+            test = step;
+            while (test->km > end && step->km - step->carmax <= stationtree_pre(test)->km) {
+                test = stationtree_pre(test);
+            }
+            if (test->km > end) {
+                view = stationtree_suc(test);
+            } else {
+                view = test;
+            }
+            if (max_view == NULL || max_view->km >= view->km) {
                 max_view = view;
-                best_view = step;
+                selected = step;
             }
             step = stationtree_pre(step);
-            count_step++;
         }
-        if (best_view != NULL) { // If the best step is found
-            base = best_view;
-            step = stationtree_pre(best_view);
-            inter[num_inter] = best_view->km;
-            num_inter++;
+        if (selected != NULL) {
+            base = selected;
+            step = stationtree_pre(selected);
+            saved[length] = selected;
+            length++;
         } else { // If there are no steps to reach the end
             printf("nessun percorso\n");
             return;
         }
-        if (base->km - end <= base->carmax) { // If the trip can be direct now
-            break;
+        max_view = NULL;
+        selected = NULL;
+    }
+
+    saved[length] = stationtree_search(root, end);
+    length++;
+
+    // Correction of the path from end
+    for (int i = length - 2; i > 0; i--) {
+        selected = NULL;
+        step = stationtree_pre(saved[i]);
+        while (saved[i-1]->km - saved[i-1]->carmax <= step->km) {
+            if (step->km - step->carmax <= saved[i+1]->km) {
+                selected = step;
+            }
+            step = stationtree_pre(step);
+        }
+        if (selected != NULL) {
+            saved[i] = selected;
         }
     }
 
-    if (num_inter != 0) {
-        printf("%d ", begin); // Print the starting station
-        for (int i = 0; i < num_inter; i++) { // Print the intermediate stations
-            printf("%d ", inter[i]);
-        }
-        printf("%d\n", end); // Print the ending station
-    } else {
-        printf("nessun percorso\n");
+    // Print the path
+    for (int i = 0; i < length - 1; i++) {
+        printf("%d ", saved[i]->km);
     }
+    printf("%d\n", end);
 }
 
 int main() {
-    carnil = (car*)malloc(sizeof(car)); // The carnil
-    carnil->color = 'B';
-
-    stationnil = (station*)malloc(sizeof(station)); // The carnil
-    stationnil->color = 'B';
-
-    station* stationtree = stationnil; // The stationtree
+    station* stationtree = NULL; // The stationtree
 
     char input[MAX_INPUT]; // Input buffer for strings
 
-    station* s; // Station pointer
-    car* c; // Car pointer
+    station* s = NULL; // Station pointer
+    car* c = NULL; // Car pointer
 
-    int s_km; // Station km
-    int c_num; // Car number
-    int c_km; // Car km
+    int s_km = 0; // Station km
+    int c_num = 0; // Car number
+    int c_km = 0; // Car km
 
-    int begin; // Start of the path
-    int end; // End of the path
+    int begin = 0; // Start of the path
+    int end = 0; // End of the path
 
     while (scanf("%s", input) != EOF) {
-        if (input[0] == 'a') { // "aggiungi-"
-            if (input[9] == 's') { // "stazione"
+        if (input[0] == 'a') {
+            if (input[9] == 's') { // "aggiungi-stazione"
                 if (scanf("%s", input) == EOF) {
                     return 0;
                 }
                 s_km = atoi(input);
                 s = stationtree_search(stationtree, s_km);
-                if (s == stationnil) {
+                if (s == NULL) {
                     stationtree_insert(&stationtree, s_km);
                     s = stationtree_search(stationtree, s_km);
                     if (scanf("%s", input) == EOF) {
@@ -819,7 +467,7 @@ int main() {
                 } else {
                     printf("non aggiunta\n");
                 }
-            } else if (input[9] == 'a') { // "auto"
+            } else if (input[9] == 'a') { // "aggiungi-auto"
                 if (scanf("%s", input) == EOF) {
                     return 0;
                 }
@@ -829,7 +477,7 @@ int main() {
                 }
                 c_km = atoi(input);
                 s = stationtree_search(stationtree, s_km);
-                if (s != stationnil) {
+                if (s != NULL) {
                     cartree_insert(&(s->cartree), c_km);
                     if (c_km > s->carmax) {
                         s->carmax = c_km;
@@ -845,7 +493,7 @@ int main() {
             }
             s_km = atoi(input);
             s = stationtree_search(stationtree, s_km);
-            if (s != stationnil) {
+            if (s != NULL) {
                 stationtree_delete(&stationtree, s);
                 printf("demolita\n");
             } else {
@@ -857,20 +505,19 @@ int main() {
             }
             s_km = atoi(input);
             s = stationtree_search(stationtree, s_km);
-            if (s != stationnil) {
+            if (s != NULL) {
                 if (scanf("%s", input) == EOF) {
                     return 0;
                 }
                 c_km = atoi(input);
-                c = cartree_search(s->cartree, c_km);
-                if (c != carnil) {
-                    cartree_delete(&(s->cartree), c);
-                    if (c_km == s->carmax) {
-                        s->carmax = cartree_max(s->cartree)->km;
+                cartree_delete(&(s->cartree), c_km);
+                if (c_km == s->carmax) {
+                    c = cartree_max(s->cartree);
+                    if (c != NULL) {
+                        s->carmax = c->km;
+                    } else {
+                        s->carmax = 0;
                     }
-                    printf("rottamata\n");
-                } else {
-                    printf("non rottamata\n");
                 }
             } else {
                 printf("non rottamata\n");
@@ -885,11 +532,12 @@ int main() {
             }
             end = atoi(input);
             if (begin <= end) {
-                forward_path(stationtree, begin, end);
+                front_path(stationtree, begin, end);
             } else {
                 back_path(stationtree, begin, end);
             }
         }
     }
+    stationtree_free(stationtree);
     return 0;
 }
